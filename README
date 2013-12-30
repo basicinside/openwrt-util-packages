@@ -1,0 +1,5 @@
+usb-ctrl
+
+This package contains a utility to control the 
+power settings for a USB hub and resetting USB
+devices. It detect port states and turns power on and off.

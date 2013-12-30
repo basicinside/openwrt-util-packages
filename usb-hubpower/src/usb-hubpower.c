@@ -1,4 +1,6 @@
 /* hubpower -- control the power settings for a USB hub
+ * and usbreset  -- send a USB port reset to a USB device
+ * http://marc.info/?l=linux-usb-users&m=116827193506484&w=2
  * from Alan Stern <stern@rowland.harvard.edu>
  * http://marc.info/?l=linux-usb&m=127162615232234&w=2
  *
@@ -60,10 +62,13 @@ int usb_level;
 void usage(char * appname)
 {
 	fprintf(stderr, "Usage:"
-		"\t%s busnum:devnum power {portnum (on|off)} ...\n"
-		"\t%s busnum:devnum status\n"
-		"\t%s busnum:devnum bind\n",
-		appname, appname, appname);
+		"%s busnum:devnum [action] \n"
+		"Actions:\n"
+		"\t power [<portnum> (on|off)]* \n"
+		"\t status\n"
+		"\t bind\n"
+		"\t reset\n",
+		appname);
 	exit(1);
 }
 
@@ -157,6 +162,10 @@ int main(int argc, char **argv)
 		action = DO_BIND;
 		if (argc != 3)
 			usage(argv[0]);
+	} else if(strcmp(argv[2], "reset") == 0) {
+		action = DO_RESET;
+		if (argc != 3)
+			usage(argv[0]);
 	} else {
 		usage(argv[0]);
 	}
@@ -185,29 +194,34 @@ int main(int argc, char **argv)
 		perror("Error reading device descriptor");
 		return 1;
 	}
-	if (dev_descr.bDeviceClass != USB_CLASS_HUB) {
-		fprintf(stderr, "Device %d:%d is not a hub\n",
-				busnum, devnum);
-		return 1;
-	}
-	if (bus_endian) {
-		dev_descr.bcdUSB = __le16_to_cpu(dev_descr.bcdUSB);
-	}
-	usb_level = dev_descr.bcdUSB >> 8;
 
-	ctrl.bRequestType = USB_DIR_IN | USB_TYPE_CLASS | USB_RECIP_DEVICE;
-	ctrl.bRequest = USB_REQ_GET_DESCRIPTOR;
-	ctrl.wValue = USB_DT_HUB << 8;
-	ctrl.wIndex = 0;
-	ctrl.wLength = USB_DT_HUB_SIZE;
-	ctrl.timeout = USB_HUB_TIMEOUT;
-	ctrl.data = &hub_descr;
-	rc = ioctl(fd, USBDEVFS_CONTROL, &ctrl);
-	if (rc == -1) {
-		perror("Error in ioctl (read hub descriptor)");
-		return 1;
+	if (action != DO_RESET) {
+		if (dev_descr.bDeviceClass != USB_CLASS_HUB) {
+			fprintf(stderr, "Device %d:%d is not a hub\n",
+					busnum, devnum);
+			return 1;
+		}
+
+
+		if (bus_endian) {
+			dev_descr.bcdUSB = __le16_to_cpu(dev_descr.bcdUSB);
+		}
+		usb_level = dev_descr.bcdUSB >> 8;
+
+		ctrl.bRequestType = USB_DIR_IN | USB_TYPE_CLASS | USB_RECIP_DEVICE;
+		ctrl.bRequest = USB_REQ_GET_DESCRIPTOR;
+		ctrl.wValue = USB_DT_HUB << 8;
+		ctrl.wIndex = 0;
+		ctrl.wLength = USB_DT_HUB_SIZE;
+		ctrl.timeout = USB_HUB_TIMEOUT;
+		ctrl.data = &hub_descr;
+		rc = ioctl(fd, USBDEVFS_CONTROL, &ctrl);
+		if (rc == -1) {
+			perror("Error in ioctl (read hub descriptor)");
+			return 1;
+		}
+		numports = hub_descr.bNbrPorts;
 	}
-	numports = hub_descr.bNbrPorts;
 
 	if (action == DO_STATUS) {
 		for (portnum = 1; portnum <= numports; ++portnum)
@@ -225,6 +239,19 @@ int main(int argc, char **argv)
 			return 1;
 		}
 		printf("Bind-driver request sent to the kernel\n");
+		return 0;
+	}
+
+	if (action == DO_RESET) {
+		usb_ioctl.ifno = 0;
+		usb_ioctl.ioctl_code = USBDEVFS_RESET;
+		usb_ioctl.data = NULL;
+		rc = ioctl(fd, USBDEVFS_IOCTL, &usb_ioctl);
+		if (rc == -1) {
+			perror("Error in ioctl (USBDEVFS_RESET)");
+			return 1;
+		}
+		printf("Reset was send to the device\n");
 		return 0;
 	}
 

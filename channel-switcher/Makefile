@@ -13,7 +13,8 @@ define Package/channel_switcher
   SECTION:=utils
   CATEGORY:=Utilities
   TITLE:=channel_switcher
-  MAINtAINER:=Robin Kuck <robin@basicinside.de>
+  MAINTAINER:=Robin Kuck <robin@basicinside.de>
+  DEPENDS:= +libnl-tiny
 endef
 
 define Package/channel_switcher/description
@@ -34,6 +35,7 @@ TARGET_CFLAGS += $(FPIC)
 define Build/Compile
 		$(TARGET_CC) $(TARGET_CFLAGS) -I$(PKG_BUILD_DIR) \
 			-o $(PKG_BUILD_DIR)/channel_switcher \
+			-I$(STAGING_DIR)/usr/include/libnl-tiny -lnl-tiny \
 			$(PKG_BUILD_DIR)/channel_switcher.c
 endef
 

@@ -22,7 +22,7 @@ static struct nl_sock* sock;
 static enum nl80211_commands cmd;
 
 static long interval_us = 999999;
-char * interface_name;
+const char * interface_name;
 static int interface_idx = 0;
 int channel_count = 0;
 int channels[50] = {2412,2417,2422,2427,2432,2437,2442,2447,2452,2457,2462,2467,2472};

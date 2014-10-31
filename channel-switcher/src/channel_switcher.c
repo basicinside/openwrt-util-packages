@@ -55,7 +55,7 @@ static int nl_cb_iface(struct nl_msg* msg, void* args)
 
 void do_switch(int signal)
 {
-    static struct nl_msg* msg = nlmsg_alloc();
+    struct nl_msg* msg = nlmsg_alloc();
 
     genlmsg_put(msg, 0, 0, driver_id, 0, 0, cmd, 0);
 

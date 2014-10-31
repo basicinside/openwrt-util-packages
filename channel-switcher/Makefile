@@ -42,6 +42,9 @@ endef
 define Package/channel_switcher/install
 		$(INSTALL_DIR) $(1)/bin
 		$(INSTALL_BIN) $(PKG_BUILD_DIR)/channel_switcher $(1)/bin/
+		$(INSTALL_DIR) $(1)/etc/channelswitch
+		$(INSTALL_BIN) ./files/channel2 $(1)/etc/channelswitch/
+		$(INSTALL_BIN) ./files/channel5 $(1)/etc/channelswitch/
 endef
 
 $(eval $(call BuildPackage,channel_switcher))

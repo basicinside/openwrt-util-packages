@@ -18,8 +18,8 @@
 
 static int channel_idx = 0;
 static int driver_id;
-struct nl_sock* sock;
-enum nl80211_commands cmd;
+static struct nl_sock* sock;
+static enum nl80211_commands cmd;
 
 static long interval_us = 999999;
 char * interface_name;
@@ -43,46 +43,30 @@ int load_channels(const char* path) {
     }
 }
 
+#ifdef DEBUG
 static int nl_cb_iface(struct nl_msg* msg, void* args)
 {
-    struct nlmsghdr* ret_hdr = nlmsg_hdr(msg);
-    struct nlattr *tb_msg[NL80211_ATTR_MAX + 1];
     struct timeval now;
 
-    LOG_DEBUG("cb\n");
-    if (ret_hdr->nlmsg_type != driver_id)
-    {
-        LOG_DEBUG("NL_STOP returned");
-        return NL_STOP;
-    }
-
-    struct genlmsghdr *gnlh = (struct genlmsghdr*) nlmsg_data(ret_hdr);
-
-    nla_parse(tb_msg, NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0),
-              genlmsg_attrlen(gnlh, 0), NULL);
-
-    if (tb_msg[NL80211_ATTR_IFTYPE]) {
-        int type = nla_get_u32(tb_msg[NL80211_ATTR_IFTYPE]);
-
-        printf("Type: %d", type);
-    }
     gettimeofday(&now, NULL);
-    printf("Response took %ld micro seconds", now.tv_usec % interval_us);
+    printf("Response took %ld us\n", now.tv_usec % interval_us);
 }
+#endif
 
 void do_switch(int signal)
 {
-    static int rc;
-    struct nl_msg* msg = nlmsg_alloc();
+    static struct nl_msg* msg = nlmsg_alloc();
 
     genlmsg_put(msg, 0, 0, driver_id, 0, 0, cmd, 0);
 
     NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, interface_idx);
     NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_FREQ, channels[channel_idx]);
 
-    rc = nl_send_auto_complete(sock, msg);
+    nl_send_auto_complete(sock, msg);
+#ifdef DEBUG
     printf("Set channel to %i on %s (%i)\n", channels[channel_idx],
             interface_name, interface_idx);
+#endif
 
     nl_recvmsgs_default(sock);
     channel_idx = (channel_idx + 1) % channel_count;
@@ -138,7 +122,9 @@ int main(int argc, char **argv)
     }
 
     driver_id = genl_ctrl_resolve(sock, "nl80211");
-    nl_socket_modify_cb(sock, NL_CB_VALID, NL_CB_CUSTOM, nl_cb_iface, NULL);
+#ifdef DEBUG
+    nl_socket_modify_cb(sock, NL_CB_ACK, NL_CB_CUSTOM, nl_cb_iface, NULL);
+#endif
     cmd = NL80211_CMD_SET_CHANNEL;
 
     gettimeofday(&now, NULL);

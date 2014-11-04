@@ -64,7 +64,10 @@ void do_switch(int signal)
 
     nl_send_auto_complete(sock, msg);
 #ifdef DEBUG
-    printf("Set channel to %i on %s (%i)\n", channels[channel_idx],
+    struct timeval now;
+    gettimeofday(&now, NULL);
+    printf("[%i.%i]Set channel to %i on %s (%i)\n", now.tv_sec, now.tv_usec,
+            channels[channel_idx],
             interface_name, interface_idx);
 #endif
 

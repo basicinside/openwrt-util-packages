@@ -36,7 +36,7 @@ define Build/Compile
 		$(TARGET_CC) $(TARGET_CFLAGS) -I$(PKG_BUILD_DIR) \
 			-o $(PKG_BUILD_DIR)/channel_switcher \
 			-I$(STAGING_DIR)/usr/include/libnl-tiny -lnl-tiny \
-			$(PKG_BUILD_DIR)/channel_switcher.c
+			$(PKG_BUILD_DIR)/channel_switcher.c -DDEBUG
 endef
 
 define Package/channel_switcher/install

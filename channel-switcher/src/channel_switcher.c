@@ -65,8 +65,11 @@ void do_switch(int signal)
     nl_send_auto_complete(sock, msg);
 #ifdef DEBUG
     struct timeval now;
+    struct tm *localnow;
     gettimeofday(&now, NULL);
-    printf("[%i.%i]Set channel to %i on %s (%i)\n", now.tv_sec, now.tv_usec,
+    localnow = localtime(&now.tv_sec);
+    printf("[%i:%i]Set channel to %i on %s (%i)\n", localnow->tm_min,
+            local->tm_sec,
             channels[channel_idx],
             interface_name, interface_idx);
 #endif
@@ -100,6 +103,7 @@ int set_interval_us(const char* value)
 int main(int argc, char **argv)
 {
     struct timeval now;
+    struct tm *localnow;
     int rc;
 
     if (argc < 3) {
@@ -133,7 +137,8 @@ int main(int argc, char **argv)
     signal(SIGALRM, do_switch);
     /* start at second 0,15,30,45 */
     gettimeofday(&now, NULL);
-    sleep(14-(now.tv_sec % 15));
+    localnow = localtime(&now.tv_sec);
+    sleep(14-(localnow->tm_sec % 15));
     /* start at microsecond 0 */
     ualarm(999999 - now.tv_usec, interval_us);
 

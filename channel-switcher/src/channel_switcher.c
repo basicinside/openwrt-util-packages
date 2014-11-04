@@ -130,11 +130,10 @@ int main(int argc, char **argv)
 #endif
     cmd = NL80211_CMD_SET_CHANNEL;
 
-    gettimeofday(&now, NULL);
     signal(SIGALRM, do_switch);
     /* start at second 0,15,30,45 */
-    sleep(15-(now.tv_sec % 15));
     gettimeofday(&now, NULL);
+    sleep(14-(now.tv_sec % 15));
     /* start at microsecond 0 */
     ualarm(999999 - now.tv_usec, interval_us);
 

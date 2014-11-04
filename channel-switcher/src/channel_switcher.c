@@ -133,10 +133,8 @@ int main(int argc, char **argv)
     gettimeofday(&now, NULL);
     signal(SIGALRM, do_switch);
     /* start at second 0,15,30,45 */
-    while(((now.tv_sec % 15)-1 == 0) {
-        usleep((interval_us);
-        gettimeofday(&now, NULL);
-    }
+    sleep(15-(now.tv_sec % 15));
+    gettimeofday(&now, NULL);
     /* start at microsecond 0 */
     ualarm(999999 - now.tv_usec, interval_us);
 

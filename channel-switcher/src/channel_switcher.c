@@ -69,7 +69,7 @@ void do_switch(int signal)
     gettimeofday(&now, NULL);
     localnow = localtime(&now.tv_sec);
     printf("[%i:%i]Set channel to %i on %s (%i)\n", localnow->tm_min,
-            local->tm_sec,
+            localnow->tm_sec,
             channels[channel_idx],
             interface_name, interface_idx);
 #endif
